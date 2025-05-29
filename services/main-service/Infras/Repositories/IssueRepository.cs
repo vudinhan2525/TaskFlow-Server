@@ -195,6 +195,7 @@ public class IssueRepository : IIssueRepository
         if (!string.IsNullOrEmpty(body.Title)) existingIssue.Title = body.Title;
         if (!string.IsNullOrEmpty(body.ProjectId)) existingIssue.ProjectId = body.ProjectId;
         if (!string.IsNullOrEmpty(body.SprintId)) existingIssue.SprintId = body.SprintId;
+        if(body.SprintId == "null") existingIssue.SprintId = "";
         if (!string.IsNullOrEmpty(body.AssigneeId)) existingIssue.AssigneeId = body.AssigneeId;
         if (!string.IsNullOrEmpty(body.Description)) existingIssue.Description = body.Description;
         if (!string.IsNullOrEmpty(body.Summary)) existingIssue.Summary = body.Summary;
