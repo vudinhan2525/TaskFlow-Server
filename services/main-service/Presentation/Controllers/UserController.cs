@@ -301,17 +301,22 @@ public class UserController : UserService.UserServiceBase
         {
             throw new RpcException(new Status(StatusCode.Unauthenticated, "User is not authenticated."));
         }
-        var result = await _userUseCase.GetStats(request.ProjectId);
-        if (result == null)
+        
+        var domainStats = await _userUseCase.GetStats(request.ProjectId);
+        
+        if (domainStats == null)
         {
             throw new RpcException(new Status(StatusCode.Internal, "Failed to retrieve stats."));
         }
 
+        // Use the mapper to convert from domain model to response model
+        var stats = _mapper.Map<TaskFlow.UserService.UserStats>(domainStats);
+
         return new GetStatsRes
         {
             Status = "success",
-            Message = "Logged out successfully",
-            Data = result
+            Message = "Stats retrieved successfully",
+            Data = stats
         };
     }
 

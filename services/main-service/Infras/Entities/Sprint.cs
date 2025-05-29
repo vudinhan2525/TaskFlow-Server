@@ -1,13 +1,53 @@
+using MainService.Domain.Entities;
 using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 
 namespace MainService.Infras.Entities;
 
+public class SprintProgress
+    {
+        [BsonElement("day")]
+        public string Day { get; set; } = string.Empty;
+
+        [BsonElement("planned")]
+        public int Planned { get; set; }
+
+        [BsonElement("completed")]
+        public int Completed { get; set; }
+
+        [BsonElement("remaining")]
+        public int Remaining { get; set; }
+    }
+
+public class SprintStatistics
+{
+    [BsonElement("total_issues")]
+    public int TotalIssues { get; set; }
+
+    [BsonElement("completed_issues")]
+    public int CompletedIssues { get; set; }
+
+    [BsonElement("total_story_points")]
+    public int TotalStoryPoints { get; set; }
+
+    [BsonElement("completed_story_points")]
+    public int CompletedStoryPoints { get; set; }
+
+    [BsonElement("issues_by_type")]
+    public Dictionary<string, int> IssuesByType { get; set; } = new();
+
+    [BsonElement("issues_by_status")]
+    public Dictionary<string, int> IssuesByStatus { get; set; } = new();
+
+    [BsonElement("daily_progress")]
+    public List<SprintProgress> DailyProgress { get; set; } = new();
+}
+
 public class Sprint
 {
     [BsonId]
     [BsonRepresentation(BsonType.ObjectId)]
-    public string? Id { get; set; }
+    public string Id { get; set; } = string.Empty;
 
     [BsonElement("name")]
     public string Name { get; set; } = string.Empty;
@@ -32,4 +72,7 @@ public class Sprint
 
     [BsonElement("project_id")]
     public string ProjectId { get; set; } = string.Empty;
+
+    [BsonElement("statistics")]
+    public SprintStatistics Statistics { get; set; } = new();
 }

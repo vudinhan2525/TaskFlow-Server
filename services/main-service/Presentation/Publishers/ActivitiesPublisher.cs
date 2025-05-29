@@ -1,5 +1,9 @@
+using MainService.Domain.Entities;
+using MainService.Domain.Interfaces;
+
 using Confluent.Kafka;
 using System.Text.Json;
+
 public class ActivitiesPublisher : IPublisherService, IDisposable
 {
     private readonly IProducer<Null, string> _producer;
@@ -29,6 +33,10 @@ public class ActivitiesPublisher : IPublisherService, IDisposable
 
         var json = JsonSerializer.Serialize(message);
         await _producer.ProduceAsync(_topic, new Message<Null, string> { Value = json });
+    }
+    public async Task PublishActivity(ActivityDomain activity)
+    {
+        await Emit(activity);
     }
 
     public void Dispose() => _producer.Dispose();
