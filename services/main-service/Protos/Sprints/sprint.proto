@@ -38,12 +38,10 @@ service SprintService {
 }
 
 message SprintProgress {
-  string date = 1;
-  int32 planned_total = 2;
-  int32 completed_count = 3;
-  int32 remaining_count = 4;
-  int32 completed_story_points = 5;
-  int32 remaining_story_points = 6;
+  string day = 1;  
+  int32 planned = 2;  
+  int32 completed = 3;  
+  int32 remaining = 4;  
 }
 
 message SprintStatistics {

@@ -5,25 +5,19 @@ using MongoDB.Bson.Serialization.Attributes;
 namespace MainService.Infras.Entities;
 
 public class SprintProgress
-{
-    [BsonElement("date")]
-    public DateTime Date { get; set; }
+    {
+        [BsonElement("day")]
+        public string Day { get; set; } = string.Empty;
 
-    [BsonElement("planned_total")]
-    public int PlannedTotal { get; set; }
+        [BsonElement("planned")]
+        public int Planned { get; set; }
 
-    [BsonElement("completed_count")]
-    public int CompletedCount { get; set; }
+        [BsonElement("completed")]
+        public int Completed { get; set; }
 
-    [BsonElement("remaining_count")]
-    public int RemainingCount { get; set; }
-
-    [BsonElement("completed_story_points")]
-    public int CompletedStoryPoints { get; set; }
-
-    [BsonElement("remaining_story_points")]
-    public int RemainingStoryPoints { get; set; }
-}
+        [BsonElement("remaining")]
+        public int Remaining { get; set; }
+    }
 
 public class SprintStatistics
 {

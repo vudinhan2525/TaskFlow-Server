@@ -2,12 +2,10 @@ namespace MainService.Domain.Entities;
 
 public class SprintProgressDomain
 {
-    public DateTime Date { get; set; }
-    public int PlannedTotal { get; set; }
-    public int CompletedCount { get; set; }
-    public int RemainingCount { get; set; }
-    public int CompletedStoryPoints { get; set; }
-    public int RemainingStoryPoints { get; set; }
+    public string Day { get; set; } = string.Empty;
+    public int Planned { get; set; }
+    public int Completed { get; set; }
+    public int Remaining { get; set; }
 }
 
 public class SprintStatisticsDomain

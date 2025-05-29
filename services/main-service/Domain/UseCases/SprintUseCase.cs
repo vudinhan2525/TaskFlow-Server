@@ -43,12 +43,10 @@ public class SprintUseCase
             {
                 new SprintProgressDomain
                 {
-                    Date = DateTime.UtcNow,
-                    PlannedTotal = 0,
-                    CompletedCount = 0,
-                    RemainingCount = 0,
-                    CompletedStoryPoints = 0,
-                    RemainingStoryPoints = 0
+                    Day = DateTime.UtcNow.ToString("yyyy-MM-dd"),
+                    Planned = 0,
+                    Completed = 0,
+                    Remaining = 0
                 }
             }
         };
@@ -77,17 +75,43 @@ public class SprintUseCase
             .GroupBy(i => i.ColumnId)
             .ToDictionary(g => g.Key, g => g.Count());
 
-        // Add daily progress
-        var progress = new SprintProgressDomain
+        // Calculate daily progress
+        var totalDays = (sprint.DateEnded - sprint.DateStarted).Days;
+        var progressData = new List<SprintProgressDomain>();
+
+        for (int day = 0; day <= totalDays; day += 2) // Add data every 2 days
         {
-            Date = DateTime.UtcNow,
-            PlannedTotal = sprint.Statistics.TotalIssues,
-            CompletedCount = sprint.Statistics.CompletedIssues,
-            RemainingCount = sprint.Statistics.TotalIssues - sprint.Statistics.CompletedIssues,
-            CompletedStoryPoints = sprint.Statistics.CompletedStoryPoints,
-            RemainingStoryPoints = sprint.Statistics.TotalStoryPoints - sprint.Statistics.CompletedStoryPoints
-        };
-        sprint.Statistics.DailyProgress.Add(progress);
+            var currentDate = sprint.DateStarted.AddDays(day);
+            if (currentDate > DateTime.UtcNow) break; // Don't add future dates
+
+            // Get completed issues up to this date
+            var completedIssues = issues.Count(i =>
+                i.ColumnId == "done" &&
+                i.UpdatedAt <= currentDate);
+
+            var progress = new SprintProgressDomain
+            {
+                Day = currentDate.ToString("yyyy-MM-dd"),
+                Planned = issues.Count,
+                Completed = completedIssues,
+                Remaining = issues.Count - completedIssues
+            };
+            progressData.Add(progress);
+        }
+
+        // Ensure at least one progress entry
+        if (!progressData.Any())
+        {
+            progressData.Add(new SprintProgressDomain
+            {
+                Day = sprint.DateStarted.ToString("yyyy-MM-dd"),
+                Planned = issues.Count,
+                Completed = 0,
+                Remaining = issues.Count
+            });
+        }
+
+        sprint.Statistics.DailyProgress = progressData;
 
         // Publish activity
         await _publisherService.Emit(new ActivityDomain

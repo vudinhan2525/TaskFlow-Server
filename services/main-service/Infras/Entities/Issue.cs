@@ -1,7 +1,9 @@
 using MainService.Domain.Entities;
 using MainService.Domain.Enums;
 using MongoDB.Bson;
+using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.Attributes;
+using MongoDB.Bson.Serialization.Serializers;
 
 namespace MainService.Infras.Entities;
 
@@ -48,6 +50,7 @@ public class Issue
     public string Summary { get; set; } = string.Empty;
 
     [BsonElement("description")]
+    [BsonSerializer(typeof(DescriptionSerializer))]
     public string Description { get; set; } = string.Empty;
 
     [BsonElement("story_point")]
@@ -109,5 +112,27 @@ public class Issue
         domain.AssignToUser(AssigneeId);
 
         return domain;
+    }
+}
+
+public class DescriptionSerializer : SerializerBase<string>
+{
+    public override string Deserialize(BsonDeserializationContext context, BsonDeserializationArgs args)
+    {
+        if (context.Reader.GetCurrentBsonType() == BsonType.Document)
+        {
+            var document = BsonSerializer.Deserialize<BsonDocument>(context.Reader);
+            if (document.Contains("content"))
+            {
+                return document["content"].AsString;
+            }
+            return string.Empty;
+        }
+        return context.Reader.ReadString();
+    }
+
+    public override void Serialize(BsonSerializationContext context, BsonSerializationArgs args, string value)
+    {
+        context.Writer.WriteString(value);
     }
 }

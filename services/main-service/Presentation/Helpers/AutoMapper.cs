@@ -28,9 +28,10 @@ public class AutoMapperProfiles : Profile
         CreateMap<User, UserDomain>().ReverseMap();
 
         // Sprint mapping
-        CreateMap<SprintProgress, SprintProgressDomain>().ReverseMap();
-        CreateMap<SprintStatistics, SprintStatisticsDomain>().ReverseMap();
+        CreateMap<MainService.Infras.Entities.SprintProgress, SprintProgressDomain>().ReverseMap();
+        CreateMap<MainService.Infras.Entities.SprintStatistics, SprintStatisticsDomain>().ReverseMap();
         CreateMap<Sprint, SprintDomain>().ReverseMap();
+
         CreateMap<ProjectMember, ProjectMemberDomain>().ReverseMap();
 
         // Request mappings
@@ -77,11 +78,35 @@ public class AutoMapperProfiles : Profile
             .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => src.UpdatedAt.ToString("o")))
             .ForMember(dest => dest.Role, opt => opt.MapFrom(src => src.Role.ToString()));
 
+        // Sprint mappings
+        CreateMap<SprintProgressDomain, TaskFlow.SprintService.SprintProgress>()
+            .ForMember(dest => dest.Day, opt => opt.MapFrom(src => src.Day))
+            .ForMember(dest => dest.Planned, opt => opt.MapFrom(src => src.Planned))
+            .ForMember(dest => dest.Completed, opt => opt.MapFrom(src => src.Completed))
+            .ForMember(dest => dest.Remaining, opt => opt.MapFrom(src => src.Remaining));
+        CreateMap<SprintStatisticsDomain, TaskFlow.SprintService.SprintStatistics>()
+            .ForMember(dest => dest.TotalIssues, opt => opt.MapFrom(src => src.TotalIssues))
+            .ForMember(dest => dest.CompletedIssues, opt => opt.MapFrom(src => src.CompletedIssues))
+            .ForMember(dest => dest.TotalStoryPoints, opt => opt.MapFrom(src => src.TotalStoryPoints))
+            .ForMember(dest => dest.CompletedStoryPoints, opt => opt.MapFrom(src => src.CompletedStoryPoints))
+            .ForMember(dest => dest.IssuesByType, opt => opt.MapFrom(src => src.IssuesByType))
+            .ForMember(dest => dest.IssuesByStatus, opt => opt.MapFrom(src => src.IssuesByStatus))
+            .ForMember(dest => dest.DailyProgress, opt => opt.MapFrom(src => src.DailyProgress
+                .OrderBy(p => p.Day)
+                .Select(p => new TaskFlow.SprintService.SprintProgress
+                {
+                    Day = p.Day,
+                    Planned = p.Planned,
+                    Completed = p.Completed,
+                    Remaining = p.Remaining
+                })));
+
         CreateMap<SprintDomain, SprintRes>()
             .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => src.CreatedAt.ToString("o")))
             .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => src.UpdatedAt.ToString("o")))
             .ForMember(dest => dest.DateStarted, opt => opt.MapFrom(src => src.DateStarted.ToString("o")))
-            .ForMember(dest => dest.DateEnded, opt => opt.MapFrom(src => src.DateEnded.ToString("o")));
+            .ForMember(dest => dest.DateEnded, opt => opt.MapFrom(src => src.DateEnded.ToString("o")))
+            .ForMember(dest => dest.Statistics, opt => opt.MapFrom(src => src.Statistics));
 
         CreateMap<UserDomain, UserInfo>()
             .ForMember(dest => dest.Id, opt => opt.MapFrom(src => src.Id))
@@ -110,5 +135,7 @@ public class AutoMapperProfiles : Profile
             .ForMember(dest => dest.Field, opt => opt.MapFrom(src => src.Field ?? ""))
             .ForMember(dest => dest.OldValue, opt => opt.MapFrom(src => src.OldValue ?? ""))
             .ForMember(dest => dest.NewValue, opt => opt.MapFrom(src => src.NewValue ?? ""));
+        CreateMap<MainService.Domain.Interfaces.UserStats, TaskFlow.UserService.UserStats>();
+        
     }
 }

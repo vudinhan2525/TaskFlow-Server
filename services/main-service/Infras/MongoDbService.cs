@@ -1,5 +1,7 @@
 using MongoDB.Driver;
 using MongoDB.Bson;
+using MongoDB.Bson.Serialization;
+using MainService.Infras.Entities;
 
 namespace MainService.Infras;
 public class MongoDbService
@@ -22,6 +24,8 @@ public class MongoDbService
     {
         try
         {
+            RegisterSerializers();
+
             var connectionStr = _configuration.GetConnectionString("MongoDb");
             var mongoUrl = MongoUrl.Create(connectionStr);
             _mongoClient = new MongoClient(mongoUrl);
@@ -34,6 +38,27 @@ public class MongoDbService
         catch (Exception ex)
         {
             _logger.LogError($"MongoDB connection failed: {ex.Message}");
+        }
+    }
+
+    private void RegisterSerializers()
+    {
+        try
+        {
+            if (!BsonClassMap.IsClassMapRegistered(typeof(Issue)))
+            {
+                BsonClassMap.RegisterClassMap<Issue>(cm =>
+                {
+                    cm.AutoMap();
+                    cm.GetMemberMap(c => c.Description)
+                        .SetSerializer(new DescriptionSerializer());
+                });
+            }
+            _logger.LogInformation("MongoDB serializers registered successfully!");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError($"MongoDB serializer registration failed: {ex.Message}");
         }
     }
 
