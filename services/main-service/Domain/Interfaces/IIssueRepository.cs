@@ -1,6 +1,5 @@
 using MainService.Domain.Entities;
 using MainService.Domain.Enums;
-using TaskFlow.UserService;
 namespace MainService.Domain.Interfaces;
 
 public interface IIssueRepository
@@ -11,6 +10,7 @@ public interface IIssueRepository
     Task<UserStats> GetStats(string userId);
     Task DeleteIssue(string id);
     Task<(List<IssueDomain> Issues, int TotalCount)> ListIssues(GetIssuesParams param);
+    Task<List<IssueDomain>> GetIssuesBySprintId(string sprintId);
 }
 
 public class CreateIssueParams
@@ -23,6 +23,7 @@ public class CreateIssueParams
     public string? SprintId;
     public string? AssigneeId;
 }
+
 public class GetIssuesParams
 {
     public string? ProjectId;
@@ -33,6 +34,7 @@ public class GetIssuesParams
     public int Page;
     public int Limit;
 }
+
 public class UpdateIssueParams
 {
     public required string IssueId;
@@ -50,4 +52,14 @@ public class UpdateIssueParams
     public IssueType? Type;
     public IssuePriority? Priority;
     public List<string>? Attachments;
+}
+
+public class UserStats
+{
+    public int TotalIssues { get; set; }
+    public int CompletedIssues { get; set; }
+    public int InProgressIssues { get; set; }
+    public int TodoIssues { get; set; }
+    public Dictionary<string, int> IssuesByType { get; set; } = new();
+    public Dictionary<string, int> IssuesByPriority { get; set; } = new();
 }

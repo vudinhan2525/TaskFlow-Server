@@ -18,9 +18,11 @@ public class IssueDomain
     public string Summary { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
     public int StoryPoint { get; set; }
+    public DateTime? DueDate { get; set; }
     public List<string> Attachments { get; set; } = new();
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+    
     public void AssignToSprint(string? sprintId)
     {
         SprintId = sprintId;
@@ -30,6 +32,12 @@ public class IssueDomain
     public void AssignToUser(string? assigneeId)
     {
         AssigneeId = assigneeId;
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void UpdateDueDate(DateTime? dueDate)
+    {
+        DueDate = dueDate;
         UpdatedAt = DateTime.UtcNow;
     }
 }

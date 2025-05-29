@@ -26,9 +26,14 @@ public class AutoMapperProfiles : Profile
             .ForMember(dest => dest.AssigneeId, opt => opt.MapFrom(src => src.AssigneeId ?? string.Empty))
             .ReverseMap();
         CreateMap<User, UserDomain>().ReverseMap();
+
+        // Sprint mapping
+        CreateMap<SprintProgress, SprintProgressDomain>().ReverseMap();
+        CreateMap<SprintStatistics, SprintStatisticsDomain>().ReverseMap();
         CreateMap<Sprint, SprintDomain>().ReverseMap();
         CreateMap<ProjectMember, ProjectMemberDomain>().ReverseMap();
 
+        // Request mappings
         CreateMap<CreateSprintReq, SprintDomain>();
         CreateMap<UpdateSprintReq, SprintDomain>();
         CreateMap<CreateProjectReq, ProjectDomain>();
@@ -49,6 +54,7 @@ public class AutoMapperProfiles : Profile
         CreateMap<AddProjectMemberReq, ProjectMemberDomain>();
         CreateMap<UpdateProjectMemberRoleReq, ProjectMemberDomain>();
 
+        // Response mappings
         CreateMap<ProjectDomain, ProjectRes>()
             .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => src.CreatedAt.ToString("o")))
             .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => src.UpdatedAt.ToString("o")))

@@ -105,7 +105,7 @@ public class UserUseCase
 
         return await _userRepository.UpdateUser(existingUser);
     }
-    public async Task<UserStats> GetStats(string projectId)
+    public async Task<MainService.Domain.Interfaces.UserStats> GetStats(string projectId)
     {
         return await _issueRepository.GetStats(projectId);
     }
