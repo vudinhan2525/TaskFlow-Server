@@ -11,12 +11,14 @@ namespace MainService.Infras.Repositories;
 
 public class ProjectRepository : IProjectRepository
 {
-    private readonly ILogger<ProjectRepository> _logger;
     private readonly IMongoCollection<Project> _projects;
     private readonly IMongoCollection<ProjectColumn> _projectColumns;
+    private readonly IMongoCollection<ProjectTeam> _projectTeams;
     private readonly IMongoCollection<Issue> _issues;
     private readonly IMongoCollection<ProjectMember> _teamMembers;  // Changed to match DB collection name
     private readonly IMongoCollection<User> _users;
+    
+    private readonly ILogger<ProjectRepository> _logger;
     private readonly IMapper _mapper;
 
     public ProjectRepository(MongoDbService mongoDbService, IMapper mapper, ILogger<ProjectRepository> logger)
@@ -25,7 +27,7 @@ public class ProjectRepository : IProjectRepository
         _projects = database.GetCollection<Project>("projects");
         _issues = database.GetCollection<Issue>("issues");
         _projectColumns = database.GetCollection<ProjectColumn>("project_column");
-        _teamMembers = database.GetCollection<ProjectMember>("team_members");  // Changed to match DB collection name
+        _teamMembers = database.GetCollection<ProjectMember>("team_members");
         _users = database.GetCollection<User>("users");
         _mapper = mapper;
         _logger = logger;

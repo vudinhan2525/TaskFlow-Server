@@ -118,11 +118,16 @@ public class ProjectMemberController : ProjectMemberService.ProjectMemberService
             if (request.Page <= 0) request.Page = 1;
             if (request.Limit <= 0) request.Limit = 10;
 
-            var (members, totalCount) = await _projectMemberUseCase.GetProjectMembersAsync(
-                request.ProjectId,
-                (int)request.Page,
-                (int)request.Limit
-            );
+            // Use search functionality if name or email filters are provided
+            var (members, totalCount) = await _projectMemberUseCase.SearchProjectMembersAsync(new SearchProjectMemberQueryParams
+            {
+                ProjectId = request.ProjectId,
+                Name = request.Name,
+                Email = request.Email,
+                Page = (int)request.Page,
+                Limit = (int)request.Limit
+            });
+           
 
             var response = new ListProjectMembersRes
             {
@@ -156,7 +161,6 @@ public class ProjectMemberController : ProjectMemberService.ProjectMemberService
                 throw new RpcException(new Status(StatusCode.InvalidArgument, "UserId is required"));
             }
 
-            _logger.LogInformation("Getting projects for user {UserId}", request.UserId);
             var (project_members, totalCount) = await _projectMemberUseCase.GetUserProjectsAsync(
                 request.UserId,
                 (int)request.Page,

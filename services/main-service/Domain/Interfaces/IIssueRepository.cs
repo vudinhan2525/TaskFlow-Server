@@ -50,6 +50,7 @@ public class UpdateIssueParams
     public string? AssigneeId { get; set; }
     public string? Description { get; set; }
     public string? Summary { get; set; }
+    public string? TeamId { get; set; }
     public int? StoryPoint { get; set; }
     public string? ReporterId { get; set; }
     public string? ColumnId { get; set; }

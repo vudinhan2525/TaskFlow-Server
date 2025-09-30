@@ -252,6 +252,7 @@ static_resources:
                           "project_service.IssueService",
                           "project_service.ProjectMemberService",
                           "project_service.CommentService",
+                          "project_service.ProjectTeamService",
                         ]
                       convert_grpc_status: true
                       print_options:
@@ -482,7 +483,7 @@ static_resources:
               - endpoint:
                   address:
                     socket_address:
-                      address: 192.168.1.142
+                      address: 172.17.0.1
                       port_value: 5001
     - name: notification_service
       type: LOGICAL_DNS
@@ -495,7 +496,7 @@ static_resources:
               - endpoint:
                   address:
                     socket_address:
-                      address: 192.168.1.142
+                      address: 172.17.0.1
                       port_value: 5002
     - name: chat_service
       type: LOGICAL_DNS
@@ -514,5 +515,5 @@ static_resources:
               - endpoint:
                   address:
                     socket_address:
-                      address: 192.168.1.142
+                      address: 172.17.0.1
                       port_value: 5003

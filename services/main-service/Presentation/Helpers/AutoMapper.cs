@@ -1,9 +1,11 @@
 using AutoMapper;
 using MainService.Domain.Entities;
 using MainService.Domain.Common;
+using MainService.Domain.Interfaces;
 using MainService.Infras.Entities;
 using TaskFlow.IssueService;
 using TaskFlow.ProjectService;
+using TaskFlow.ProjectTeamService;
 using TaskFlow.SprintService;
 using TaskFlow.UserService;
 using BaseService;
@@ -26,11 +28,14 @@ public class AutoMapperProfiles : Profile
         CreateMap<Issue, IssueDomain>()
             .ForMember(dest => dest.SprintId, opt => opt.MapFrom(src => src.SprintId ?? string.Empty))
             .ForMember(dest => dest.AssigneeId, opt => opt.MapFrom(src => src.AssigneeId ?? string.Empty))
+            .ForMember(dest => dest.TeamId, opt => opt.MapFrom(src => src.TeamId ?? string.Empty))
             .ReverseMap();
         CreateMap<User, UserDomain>().ReverseMap();
         CreateMap<Sprint, SprintDomain>().ReverseMap();
         CreateMap<ProjectMember, ProjectMemberDomain>().ReverseMap();
         CreateMap<OtpToken, OtpTokenDomain>().ReverseMap();
+        CreateMap<ProjectTeam, ProjectTeamDomain>().ReverseMap();
+        // Removed invalid mapping: Infras.Entities.Permission does not exist
 
         CreateMap<CreateSprintReq, SprintDomain>();
         CreateMap<UpdateSprintReq, SprintDomain>();
@@ -47,10 +52,15 @@ public class AutoMapperProfiles : Profile
             .ForMember(dest => dest.SprintId, opt => opt.MapFrom(src =>
                 string.IsNullOrEmpty(src.SprintId) ? null : src.SprintId))
             .ForMember(dest => dest.AssigneeId, opt => opt.MapFrom(src =>
-                string.IsNullOrEmpty(src.AssigneeId) ? null : src.AssigneeId));
+                string.IsNullOrEmpty(src.AssigneeId) ? null : src.AssigneeId))
+            .ForMember(dest => dest.TeamId, opt => opt.MapFrom(src =>
+                string.IsNullOrEmpty(src.TeamId) ? null : src.TeamId))
+                ;
 
         CreateMap<AddProjectMemberReq, ProjectMemberDomain>();
         CreateMap<UpdateProjectMemberRoleReq, ProjectMemberDomain>();
+        CreateMap<CreateTeamParams, ProjectTeam>();
+     
 
         CreateMap<ProjectDomain, ProjectRes>()
             .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => src.CreatedAt.ToString("o")))
@@ -70,7 +80,8 @@ public class AutoMapperProfiles : Profile
             .ForMember(dest => dest.DueDateTo, opt => opt.MapFrom(src => src.DueDateTo == DateTime.MinValue ? string.Empty : src.DueDateTo.ToString("o")))
             .ForMember(dest => dest.SprintId, opt => opt.MapFrom(src => src.SprintId ?? string.Empty))
             .ForMember(dest => dest.AssigneeId, opt => opt.MapFrom(src => src.AssigneeId ?? string.Empty))
-            .ForMember(dest => dest.Column, opt => opt.MapFrom(src => src.Column));
+            .ForMember(dest => dest.Column, opt => opt.MapFrom(src => src.Column))
+            .ForMember(dest => dest.TeamId, opt => opt.MapFrom(src => src.TeamId ?? string.Empty));
 
         CreateMap<UserDomain, UserRes>()
             .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => src.CreatedAt.ToString("o")))
@@ -114,5 +125,16 @@ public class AutoMapperProfiles : Profile
             .ForMember(dest => dest.Field, opt => opt.MapFrom(src => src.Field ?? ""))
             .ForMember(dest => dest.OldValue, opt => opt.MapFrom(src => src.OldValue ?? ""))
             .ForMember(dest => dest.NewValue, opt => opt.MapFrom(src => src.NewValue ?? ""));
+
+        CreateMap<ProjectTeamDomain, ProjectTeamRes>()
+            .ForMember(dest => dest.CreatedAt, opt => opt.MapFrom(src => src.CreatedAt.ToString("o")))
+            .ForMember(dest => dest.UpdatedAt, opt => opt.MapFrom(src => src.UpdatedAt.ToString("o")))
+            .ForMember(dest => dest.PermissionKeys, opt => opt.MapFrom(src => src.PermissionKeys))
+            .ForMember(dest => dest.MemberIds, opt => opt.MapFrom(src => src.MemberIds));
+        CreateMap<ProjectPermission, PermissionDomain>().ReverseMap();
+        CreateMap<PermissionDomain, Permission>().ReverseMap();
+
+
+
     }
 }

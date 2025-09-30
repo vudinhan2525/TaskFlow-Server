@@ -6,6 +6,7 @@ public class ProjectMemberDomain
 {
     public string? Id { get; set; }
     public string ProjectId { get; set; } = string.Empty;
+    public List<string> TeamIds { get; set; } = new List<string>();
     public string UserId { get; set; } = string.Empty;
     public TeamMemberRole Role { get; set; } = TeamMemberRole.Member;
     public bool IsPending { get; set; } = true;

@@ -120,6 +120,12 @@ public class ProjectMemberUseCase
         return (members, totalCount);
     }
 
+    public async Task<(IEnumerable<ProjectMemberDomain> Members, int TotalCount)> SearchProjectMembersAsync(
+        SearchProjectMemberQueryParams param)
+    {
+        return await _projectMemberRepository.SearchProjectMembersAsync(param);
+    }
+
     public async Task<bool> IsUserProjectMemberAsync(string projectId, string userId)
     {
         return await _projectMemberRepository.IsUserProjectMemberAsync(projectId, userId);

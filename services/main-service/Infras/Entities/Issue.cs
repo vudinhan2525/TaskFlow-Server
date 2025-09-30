@@ -32,6 +32,9 @@ public class Issue
 
     [BsonElement("reporter_id")]
     public string ReporterId { get; set; } = string.Empty;
+    
+    [BsonElement("team_id")]
+    public string TeamId { get; set; } = string.Empty;
 
     [BsonElement("type")]
     [BsonRepresentation(BsonType.String)]
@@ -78,6 +81,9 @@ public class Issue
     [BsonElement("key")]
     [BsonIgnoreIfDefault]
     public string Key { get; set; } = string.Empty;
+    
+
+
 
     public static Issue FromDomain(IssueDomain domain)
     {

@@ -134,12 +134,7 @@ public class UserUseCase
     }
     public async Task<(IEnumerable<UserDomain> Users, int TotalCount)> SearchUsersAsync(SearchUserQueryParams param)
     {
-        // if (param.ProjectId != null)
-        // {
-        //     var user_ids = await _projectMemberRepository.
-        // }
         var users = await _userRepository.SearchUsersAsync(param);
-
         return users;
     }
 

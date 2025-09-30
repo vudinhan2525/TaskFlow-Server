@@ -140,6 +140,7 @@ public class IssueController : IssueService.IssueServiceBase
             ReporterId = request.ReporterId,
             SprintId = request.SprintId,
             ColumnId = request.ColumnId,
+            TeamId = request.TeamId,
             StoryPoint = request.StoryPoint,
             Summary = request.Summary,
             Title = request.Title,

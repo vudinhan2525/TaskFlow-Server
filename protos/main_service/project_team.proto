@@ -1,0 +1,136 @@
+syntax = "proto3";
+
+option go_package = "github.com/vudinhan2525/TaskFlow-Server/services/go-service/types/main_service;main_service";
+option csharp_namespace = "TaskFlow.ProjectTeamService";
+
+package project_service;
+
+import "google/protobuf/empty.proto";
+import "google/api/annotations.proto"; // Import Google API annotations
+import "base.proto";
+
+service ProjectTeamService {
+ rpc CreateProjectTeam (CreateProjectTeamReq) returns (CreateProjectTeamRes) {
+    option (google.api.http) = {
+      post: "/api/v1/projects/{project_id}/teams"
+      body: "*"
+    };
+  }
+  
+  rpc ListProjectTeams (ListProjectTeamsReq) returns (ListProjectTeamsRes) {
+    option (google.api.http) = {
+      get: "/api/v1/projects/{project_id}/teams"
+    };
+  }
+  rpc GetProjectTeam (GetProjectTeamReq) returns (ProjectTeamRes) {
+    option (google.api.http) = {
+      get: "/api/v1/projects/{project_id}/teams/{team_id}"
+    };
+  }
+  rpc UpdateProjectTeam (UpdateProjectTeamReq) returns (UpdateProjectTeamRes) {
+    option (google.api.http) = {
+      put: "/api/v1/projects/{project_id}/teams/{team_id}"
+      body: "*"
+    };
+  }
+  rpc GetUserTeams (GetUserTeamsReq) returns (GetUserTeamsRes) {
+    option (google.api.http) = {
+      get: "/api/v1/projects/{project_id}/members/{user_id}/teams"
+    };
+  }
+   rpc GetProjectPermissions (GetProjectPermissionReq) returns (GetProjectPermissionRes) {
+    option (google.api.http) = {
+      get: "/api/v1/projects/permissions"
+    };
+  }
+}
+
+
+//Permission
+message Permission {
+  string id = 1;
+  string key = 2;
+  string resource = 3;
+  string action =4 ;
+  string label =5;
+  string description= 6; 
+}
+
+
+
+// Project Team Messages
+message ProjectTeamRes {
+  string id = 1;
+  string project_id = 2;
+  string name = 3;
+  string description = 4;
+  repeated string permission_keys = 5;
+  string created_at = 6;
+  string updated_at = 7;
+  repeated string member_ids = 8;
+}
+
+message CreateProjectTeamReq {
+  string project_id = 1;
+  string name = 2;
+  string description = 3;
+  repeated string member_ids =4; 
+}
+
+message CreateProjectTeamRes {
+  string status = 1;
+  string message = 2;
+  ProjectTeamRes data = 3;
+  base.PaginationRes pagination = 4;
+}
+
+message ListProjectTeamsReq {
+  string project_id = 1;
+  int32 page = 2;
+  int32 limit = 3;
+}
+
+message ListProjectTeamsRes {
+  string status = 1;
+  string message = 2;
+  repeated ProjectTeamRes data = 3;
+  base.PaginationRes pagination = 4;
+}
+
+message GetProjectTeamReq {
+  string project_id = 1;
+  string team_id = 2;
+}
+
+message UpdateProjectTeamReq {
+  string project_id = 1;
+  string team_id = 2;
+  string name = 3;
+  string description = 4;
+  repeated string permission_keys = 5;
+}
+
+message UpdateProjectTeamRes {
+  string status = 1;
+  string message = 2;
+  ProjectTeamRes data = 3;
+  base.PaginationRes pagination = 4;
+}
+
+message GetProjectPermissionReq {
+  
+}
+
+message GetProjectPermissionRes {
+  repeated Permission permissions = 1;
+}
+
+
+message GetUserTeamsReq {
+  string project_id = 1;
+  string user_id = 2;
+}
+
+message GetUserTeamsRes {
+  repeated ProjectTeamRes data = 1;
+}

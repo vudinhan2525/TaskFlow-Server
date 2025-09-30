@@ -28,7 +28,6 @@ var logger = app.Services.GetRequiredService<ILogger<Program>>();
 var kestrelUrl = builder.Configuration.GetValue<string>("Kestrel:Endpoints:Http:Url");
 logger.LogInformation("🚀 GRPC server starting on {Addresses}", kestrelUrl);
 
-// Check MongoDB connection
 app.Services.GetRequiredService<MongoDbService>();
 
 // Configure Middleware
@@ -47,6 +46,7 @@ app.MapGrpcService<UserController>();
 app.MapGrpcService<IssueController>();
 app.MapGrpcService<ProjectMemberController>();
 app.MapGrpcService<CommentController>();
+app.MapGrpcService<ProjectTeamController>();
 
 if (app.Environment.IsDevelopment())
 {

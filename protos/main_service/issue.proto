@@ -79,6 +79,7 @@ message UpdateIssueReq {
   optional string reporter_id = 6;
   optional string title = 7;
   optional string summary = 8;
+  optional string team_id = 17  ; 
   optional string description = 9;
   optional string type = 10;
   optional string column_id = 11;
@@ -87,7 +88,6 @@ message UpdateIssueReq {
   optional string due_date_to= 16;
   google.protobuf.Int32Value story_point = 13;
   repeated string attachments = 14;
-  
 }
 
 // List All
@@ -106,6 +106,7 @@ message ListIssuesReq {
   repeated string priorities= 12;
   int32 page = 13;
   int32 limit = 14;
+  repeated string team_id = 15;
 }
 
 message ListIssuesRes {

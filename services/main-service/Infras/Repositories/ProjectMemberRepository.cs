@@ -4,18 +4,22 @@ using MainService.Domain.Interfaces;
 using MainService.Domain.Enums;
 using MainService.Infras.Entities;
 using MongoDB.Driver;
+using MongoDB.Bson;
+using System.Text.RegularExpressions;
 
 namespace MainService.Infras.Repositories;
 
 public class ProjectMemberRepository : IProjectMemberRepository
 {
     private readonly IMongoCollection<ProjectMember> _collection;
+    private readonly IMongoCollection<User> _users;
     private readonly IMapper _mapper;
 
     public ProjectMemberRepository(MongoDbService mongoDbService, IMapper mapper)
     {
         var database = mongoDbService.Database;
         _collection = database.GetCollection<ProjectMember>("project_members");
+        _users = database.GetCollection<User>("users");
         _mapper = mapper;
     }
 
@@ -40,10 +44,87 @@ public class ProjectMemberRepository : IProjectMemberRepository
             .ToListAsync();
         return _mapper.Map<IEnumerable<ProjectMemberDomain>>(entities);
     }
-
     public async Task<int> GetProjectMembersCountAsync(string projectId)
     {
         return (int)await _collection.CountDocumentsAsync(x => x.ProjectId == projectId);
+    }
+
+    public async Task<(IEnumerable<ProjectMemberDomain> Members, int TotalCount)> SearchProjectMembersAsync(SearchProjectMemberQueryParams param)
+    {
+        var name = param.Name;
+        var email = param.Email;
+        var page = param.Page;
+        var limit = param.Limit;
+
+        // First, find user IDs that match the name and email filters
+        var userFilterBuilder = Builders<User>.Filter;
+        var userFilters = new List<FilterDefinition<User>>();
+
+        if (!string.IsNullOrEmpty(name))
+        {
+            var decodedName = Uri.UnescapeDataString(name.Replace("+", " "));
+            var normalizedName = decodedName.NormalizeVietnamese();
+            var searchTerms = normalizedName.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+
+            var nameFilters = new List<FilterDefinition<User>>();
+            foreach (var term in searchTerms)
+            {
+                var pattern = RegexHelper.BuildAccentInsensitivePattern(term);
+                nameFilters.Add(userFilterBuilder.Or(
+                    userFilterBuilder.Regex(x => x.FirstName, new BsonRegularExpression(pattern, "i")),
+                    userFilterBuilder.Regex(x => x.LastName, new BsonRegularExpression(pattern, "i")),
+                    userFilterBuilder.Regex(x => x.FullName, new BsonRegularExpression(pattern, "i"))
+                ));
+            }
+            userFilters.Add(userFilterBuilder.And(nameFilters));
+        }
+
+        if (!string.IsNullOrEmpty(email))
+        {
+            var decodedEmail = Uri.UnescapeDataString(email.Replace("+", " ")).Trim();
+            userFilters.Add(userFilterBuilder.Regex(x => x.Email, new BsonRegularExpression(decodedEmail, "i")));
+        }
+
+        var userFilter = userFilters.Any() ? userFilterBuilder.And(userFilters) : userFilterBuilder.Empty;
+        var matchingUserIds = new List<string>();
+
+        if (userFilter != userFilterBuilder.Empty)
+        {
+            var matchingUsers = await _users.Find(userFilter).Project(x => x.Id).ToListAsync();
+            matchingUserIds = matchingUsers.Where(x => !string.IsNullOrEmpty(x)).ToList();
+            
+            // If no users match the filters, return empty result
+            if (!matchingUserIds.Any())
+            {
+                return (new List<ProjectMemberDomain>(), 0);
+            }
+        }
+
+        // Now filter project members by project ID and matching user IDs
+        var memberFilterBuilder = Builders<ProjectMember>.Filter;
+        var memberFilters = new List<FilterDefinition<ProjectMember>>();
+
+        memberFilters.Add(memberFilterBuilder.Eq(x => x.ProjectId, param.ProjectId));
+
+        if (matchingUserIds.Any())
+        {
+            memberFilters.Add(memberFilterBuilder.In(x => x.UserId, matchingUserIds));
+        }
+
+        var memberFilter = memberFilterBuilder.And(memberFilters);
+
+        var options = new FindOptions<ProjectMember, ProjectMember>
+        {
+            Collation = new Collation("en", strength: CollationStrength.Secondary)
+        };
+
+        var totalCount = await _collection.CountDocumentsAsync(memberFilter, new CountOptions { Collation = options.Collation });
+        var members = await _collection.Find(memberFilter)
+            .Skip((page - 1) * limit)
+            .Limit(limit)
+            .ToListAsync();
+
+        return (members.Select(m => _mapper.Map<ProjectMemberDomain>(m)), (int)totalCount);
     }
 
     public async Task<ProjectMemberDomain> AddAsync(ProjectMemberDomain member)
@@ -130,4 +211,5 @@ public class ProjectMemberRepository : IProjectMemberRepository
         var result = await _collection.DeleteOneAsync(filter);
         return result.DeletedCount > 0;
     }
-}
+
+}   

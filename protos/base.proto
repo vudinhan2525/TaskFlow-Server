@@ -43,6 +43,7 @@ message IssueRes {
     string due_date_from= 18;
     string due_date_to = 19;
     string key = 20;
+    string team_id = 21; 
 }
 
 //Activity
