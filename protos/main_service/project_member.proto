@@ -61,6 +61,12 @@ service ProjectMemberService {
       body: "*"
     };
   }
+  rpc AddMemberToTeam (AddMemberToTeamReq) returns (google.protobuf.Empty) {
+    option (google.api.http) = {
+      post: "/api/v1/projects/{project_id}/teams/{team_id}/members"
+      body: "*"
+    };
+  }
 }
 
 enum ProjectMemberRole {
@@ -165,4 +171,10 @@ message AcceptInvitationReq {
 
 message RejectInvitationReq {
   string project_id = 1;
+}
+
+message AddMemberToTeamReq {
+  string project_id = 1;
+  string team_id = 2;
+  repeated string user_ids = 3;
 }

@@ -333,6 +333,43 @@ public class ProjectMemberController : ProjectMemberService.ProjectMemberService
         }
     }
 
+    public override async Task<Empty> AddMemberToTeam(AddMemberToTeamReq request, ServerCallContext context)
+    {
+        var userId = context.UserState.ContainsKey("UserId") ? context.UserState["UserId"] as string : null;
+        if (string.IsNullOrEmpty(userId))
+        {
+            throw new RpcException(new Status(StatusCode.Unauthenticated, "User must be authenticated"));
+        }
+
+        try
+        {
+            await _projectMemberUseCase.AddMembersToTeamAsync(
+                request.ProjectId,
+                request.TeamId,
+                request.UserIds.ToList()
+            );
+
+            return new Empty();
+        }
+        catch (ArgumentException ex)
+        {
+            throw new RpcException(new Status(StatusCode.InvalidArgument, ex.Message));
+        }
+        catch (KeyNotFoundException ex)
+        {
+            throw new RpcException(new Status(StatusCode.NotFound, ex.Message));
+        }
+        catch (InvalidOperationException ex)
+        {
+            throw new RpcException(new Status(StatusCode.InvalidArgument, ex.Message));
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error adding members to team {TeamId} in project {ProjectId}", request.TeamId, request.ProjectId);
+            throw new RpcException(new Status(StatusCode.Internal, "Error adding members to team"));
+        }
+    }
+
     private static ProjectMemberRes MapToProjectMemberResponse(ProjectMemberDomain member)
     {
         return new ProjectMemberRes

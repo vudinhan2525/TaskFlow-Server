@@ -10,8 +10,8 @@ public class IssueDomain
     public string? CreatorId { get; set; }
     public string? TeamId { get; set; } 
     public string? AssigneeId { get; set; }
-    public string ParentId { get; set; } = string.Empty;
-    public string ReporterId { get; set; } = string.Empty;
+    public string? ParentId { get; set; }
+    public string? ReporterId { get; set; }
     public IssueType? Type { get; set; }
     public string ColumnId { get; set; } = string.Empty;
     public ProjectColumnDomain? Column { get; set; }

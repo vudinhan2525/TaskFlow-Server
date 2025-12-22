@@ -91,6 +91,8 @@ public class SprintRepository : ISprintRepository
 
         return (_mapper.Map<List<SprintDomain>>(sprints), (int)totalCount);
     }
+
+
     public async Task<SprintStats> GetSprintStats(string sprint_id, string project_id)
     {
         var columns = await _projectRepository.FindColumnsByProjectId(new ListProjectColumnsParams { ProjectId = project_id });

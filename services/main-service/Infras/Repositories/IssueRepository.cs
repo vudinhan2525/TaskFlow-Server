@@ -299,6 +299,64 @@ public class IssueRepository : IIssueRepository
             filter &= filterBuilder.In("type", param.Types);
         }
 
+        // Handle TeamIds filter with NULL support
+        if (param.TeamIds != null && param.TeamIds.Any())
+        {
+            var teamFilters = new List<FilterDefinition<Issue>>();
+            
+            foreach (var teamId in param.TeamIds)
+            {
+                if (teamId == "NULL")
+                {
+                    // Filter for null or empty team_id
+                    teamFilters.Add(filterBuilder.Or(
+                        filterBuilder.Eq(i => i.TeamId, null),
+                        filterBuilder.Eq(i => i.TeamId, ""),
+                        filterBuilder.Eq("team_id", BsonNull.Value)
+                    ));
+                }
+                else
+                {
+                    // Filter for specific team_id
+                    teamFilters.Add(filterBuilder.Eq(i => i.TeamId, teamId));
+                }
+            }
+            
+            if (teamFilters.Any())
+            {
+                filter &= filterBuilder.Or(teamFilters);
+            }
+        }
+
+        // Handle ParentIds filter with NULL support
+        if (param.ParentIds != null && param.ParentIds.Any())
+        {
+            var parentFilters = new List<FilterDefinition<Issue>>();
+            
+            foreach (var parentId in param.ParentIds)
+            {
+                if (parentId == "NULL")
+                {
+                    // Filter for null or empty parent_id
+                    parentFilters.Add(filterBuilder.Or(
+                        filterBuilder.Eq(i => i.ParentId, null),
+                        filterBuilder.Eq(i => i.ParentId, ""),
+                        filterBuilder.Eq("parent_id", BsonNull.Value)
+                    ));
+                }
+                else
+                {
+                    // Filter for specific parent_id
+                    parentFilters.Add(filterBuilder.Eq(i => i.ParentId, parentId));
+                }
+            }
+            
+            if (parentFilters.Any())
+            {
+                filter &= filterBuilder.Or(parentFilters);
+            }
+        }
+
         if (!string.IsNullOrEmpty(param.Keyword))
         {
             var decodedKeyword = Uri.UnescapeDataString(param.Keyword.Replace("+", " "));

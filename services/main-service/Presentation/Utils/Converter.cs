@@ -40,7 +40,7 @@ public static class ConverterUtils
 
             foreach (var rv in input.RemoveValues)
             {
-                if (rv == null && value == null)
+                if (rv == null && value == null )
                 {
                     shouldRemove = true;
                     break;
@@ -67,10 +67,16 @@ public static class ConverterUtils
 
             if (!shouldRemove)
             {
+                if ((value as string)?.ToUpper()=="NULL")
+                {
+                    result[prop.Name] = "";
+                }else{
+
                 result[prop.Name] = value;
+                }
             }
         }
-
+        
         return result;
     }
     public static DateTime? ParseIsoDateTime(string? input)

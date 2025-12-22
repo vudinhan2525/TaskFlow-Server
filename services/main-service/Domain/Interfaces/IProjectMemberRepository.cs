@@ -19,6 +19,7 @@ public interface IProjectMemberRepository
     Task<int> GetUserProjectsCountAsync(string userId);
     Task<ProjectMemberDomain> ApproveMemberAsync(string projectId, string userId);
     Task<bool> RejectMemberAsync(string projectId, string userId);
+    Task<bool> AddMembersToTeamAsync(string projectId, string teamId, List<string> userIds);
 }
 
 public class SearchProjectMemberQueryParams

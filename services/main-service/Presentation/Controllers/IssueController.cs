@@ -194,6 +194,8 @@ public class IssueController : IssueService.IssueServiceBase
             DueDateFrom = request.DueDateFrom,
             DueDateTo = request.DueDateTo,
             IssueIds = request.IssueIds.ToList(),
+            ParentIds = request.ParentIds.ToList(),
+            TeamIds = request.TeamIds.ToList(),
         });
         var totalPages = (int)Math.Ceiling((double)totalCount / request.Limit);
         var response = new ListIssuesRes();

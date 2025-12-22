@@ -212,4 +212,19 @@ public class ProjectMemberRepository : IProjectMemberRepository
         return result.DeletedCount > 0;
     }
 
+    public async Task<bool> AddMembersToTeamAsync(string projectId, string teamId, List<string> userIds)
+    {
+        var filter = Builders<ProjectMember>.Filter.And(
+            Builders<ProjectMember>.Filter.Eq(x => x.ProjectId, projectId),
+            Builders<ProjectMember>.Filter.In(x => x.UserId, userIds)
+        );
+
+        var update = Builders<ProjectMember>.Update
+            .AddToSet(x => x.TeamIds, teamId)
+            .Set(x => x.UpdatedAt, DateTime.UtcNow);
+
+        var result = await _collection.UpdateManyAsync(filter, update);
+        return result.ModifiedCount > 0;
+    }
+
 }   

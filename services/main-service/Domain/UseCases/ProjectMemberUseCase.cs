@@ -226,4 +226,33 @@ public class ProjectMemberUseCase
             throw new KeyNotFoundException("Failed to reject membership");
         }
     }
+
+    public async Task AddMembersToTeamAsync(string projectId, string teamId, List<string> userIds)
+    {
+        if (userIds == null || !userIds.Any())
+        {
+            throw new ArgumentException("User IDs list cannot be empty");
+        }
+
+        // Check if all users are project members and not pending
+        foreach (var userId in userIds)
+        {
+            var member = await _projectMemberRepository.GetByProjectAndUserAsync(projectId, userId);
+            if (member == null)
+            {
+                throw new KeyNotFoundException($"User {userId} is not a member of this project");
+            }
+
+            if (member.IsPending)
+            {
+                throw new InvalidOperationException($"Cannot add pending member {userId} to team");
+            }
+        }
+
+        var result = await _projectMemberRepository.AddMembersToTeamAsync(projectId, teamId, userIds);
+        if (!result)
+        {
+            throw new InvalidOperationException("Failed to add members to team");
+        }
+    }
 }

@@ -173,7 +173,7 @@ public class ProjectController : ProjectService.ProjectServiceBase
         {
             throw new RpcException(new Status(StatusCode.InvalidArgument, "ProjectId is required"));
         }
-
+     
         var projectColumns = await _projectUseCase.GetAllColumns(new ListProjectColumnsParams
         {
             ProjectId = request.ProjectId,
@@ -187,7 +187,10 @@ public class ProjectController : ProjectService.ProjectServiceBase
             Types = request.Types_.ToList(),
             Priorities = request.Priorities.ToList(),
             ColumnIds = request.ColumnIds.ToList(),
+            ActiveSprintOnly = request.ActiveSprintOnly, 
         });
+
+
 
         var response = new GetColumnsRes();
         response.Data.AddRange(_mapper.Map<List<ColumnRes>>(projectColumns));

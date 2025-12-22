@@ -134,6 +134,13 @@ public class IssueUseCase
                 if (oldColumn == null)
                     throw new RpcException(new Status(StatusCode.InvalidArgument, $"Original column with id '{existingIssue.ColumnId}' not found"));
 
+                // Check if moving to DONE column and set completed_at
+                // This logic automatically sets the completed_at timestamp when an issue is moved to a column named "DONE"
+                if (newColumn.Name.ToUpper() == "DONE" && oldColumn.Name.ToUpper() != "DONE")
+                {
+                    updateData.CompletedAt = DateTime.UtcNow;
+                }
+
                 await _projectRepository.UpdateColumn(new UpdateColumnParams
                 {
                     AddIssueId = updateData.Id,

@@ -40,6 +40,7 @@ public class ListProjectColumnsParams
     public List<string>? Types { get; set; }
     public List<string>? Priorities { get; set; }
     public List<string>? ColumnIds { get; set; }
+    public bool? ActiveSprintOnly { get; set; }
 }
 
 public class CreateColumnParams
