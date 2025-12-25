@@ -2,7 +2,7 @@ using MongoDB.Bson;
 using MongoDB.Bson.Serialization.Attributes;
 
 namespace MainService.Infras.Entities;
-
+[BsonIgnoreExtraElements] 
 public class Project
 {
     [BsonId]
@@ -29,6 +29,12 @@ public class Project
 
     [BsonElement("updated_at")]
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
+
+    [BsonElement("due_date_from")]
+    public DateTime? DueDateFrom { get; set; }
+
+    [BsonElement("due_date_to")]
+    public DateTime? DueDateTo { get; set; }
 
     [BsonElement("team_members")]
     public List<ProjectMember>? ProjectMembers { get; set; } = new List<ProjectMember>();

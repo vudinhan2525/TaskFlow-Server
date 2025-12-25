@@ -94,7 +94,7 @@ static_resources:
                                 string_match:
                                   exact: "POST"
                           requires: {}
-                        
+
                         - match:
                             path: "/api/v1/users/resend-otp"
                             headers:
@@ -291,7 +291,7 @@ static_resources:
                           allow_origin_string_match:
                             - prefix: "http://localhost:5173"
                             - prefix: "https://yourfrontend.com"
-                            - prefix: 'http://localhost:4173'
+                            - prefix: "http://localhost:4173"
                           allow_methods: "GET, POST, PUT, DELETE, OPTIONS"
                           allow_headers: "content-type, authorization"
                           expose_headers: "x-custom-header"
@@ -375,9 +375,9 @@ static_resources:
                     enabled: true
                   - upgrade_type: "GET"
                     enabled: true
-#                websocket_config:
-#                  idle_timeout: 0s
-#                  max_connect_attempts: 5
+                #                websocket_config:
+                #                  idle_timeout: 0s
+                #                  max_connect_attempts: 5
                 route_config:
                   virtual_hosts:
                     - name: chat_service
@@ -399,8 +399,7 @@ static_resources:
                           allow_origin_string_match:
                             - prefix: "*"
                           allow_headers: "content-type,authorization,upgrade,connection,sec-websocket-key,sec-websocket-version,sec-websocket-extensions,cookie,sid"
-                          allow_methods: "GET,POST,OPTIONS"
-                          allow_methods: "GET,POST"
+                          allow_methods: "GET, POST, OPTIONS"
                           expose_headers: "authorization"
                           allow_credentials: true
                 http_filters:
@@ -483,7 +482,7 @@ static_resources:
               - endpoint:
                   address:
                     socket_address:
-                      address: 172.17.0.1
+                      address: 192.168.2.163
                       port_value: 5001
     - name: notification_service
       type: LOGICAL_DNS
@@ -496,7 +495,7 @@ static_resources:
               - endpoint:
                   address:
                     socket_address:
-                      address: 172.17.0.1
+                      address: 192.168.2.163
                       port_value: 5002
     - name: chat_service
       type: LOGICAL_DNS
@@ -515,5 +514,5 @@ static_resources:
               - endpoint:
                   address:
                     socket_address:
-                      address: 172.17.0.1
+                      address: 192.168.2.163
                       port_value: 5003

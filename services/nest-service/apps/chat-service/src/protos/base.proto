@@ -39,6 +39,10 @@ message IssueRes {
     repeated string attachments = 14;
     string created_at = 15;
     string updated_at = 16;
+    string completed_at= 17;
+    string due_date_from= 18;
+    string due_date_to = 19;
+    string key = 20;
 }
 
 //Activity
@@ -68,20 +72,6 @@ message CommentRes {
     string created_at = 5;
     string updated_at = 6;
 }
-message NotificationRes {
-  string id = 1;
-  string recipient_id = 2;
-  string actor_id = 3;
-  string type = 4;
-  string reference_id = 5;
-  string reference_type = 6;
-  string content = 7;
-  bool is_read = 8;
-  string created_at = 9;
-  string reference_data = 10;
-  optional UserRes recipient = 11;
-  optional UserRes actor = 12;
-}
 
 message UserRes{
   string id = 1;
@@ -91,4 +81,5 @@ message UserRes{
   string role = 5;
   string created_at = 6;
   string updated_at = 7;
+  string avatar = 8;
 }

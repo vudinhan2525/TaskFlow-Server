@@ -21,9 +21,21 @@ service UserService {
       body: "*"
     };
   }
-  rpc Register (RegisterUserReq) returns (CreateUserRes) {
+  rpc Register (RegisterUserReq) returns (RegisterUserRes) {  
     option (google.api.http) = {
       post: "/api/v1/users/register"
+      body: "*"
+    };
+  }
+  rpc VerifyOTP (VerifyOTPReq) returns (VerifyOTPRes) {
+    option (google.api.http) = {
+      post: "/api/v1/users/verify"
+      body: "*"
+    };
+  }
+  rpc ResendOTP (ResendOTPReq) returns (ResendOTPRes) {
+    option (google.api.http) = {
+      post: "/api/v1/users/resend-otp"
       body: "*"
     };
   }
@@ -157,9 +169,10 @@ message GetUserRes {
 message ListUsersReq {
   optional string name = 1;
   optional string email = 2;
-  repeated string user_ids = 3;
-  int32 page = 4;
-  int32 limit = 5;
+  optional string project_id = 3;
+  repeated string user_ids = 4;
+  int32 page = 5;
+  int32 limit = 6;
 }
 
 message ListUsersRes{
@@ -170,12 +183,12 @@ message ListUsersRes{
 
 // Update User
 message UpdateUserReq {
-  string user_id = 1;
-  optional string first_name = 2;
-  optional string last_name = 3;
-  optional string email = 4;
-  optional string password = 5;
-  optional string role = 6;
+  optional string first_name = 1;
+  optional string last_name = 2;
+  optional string email = 3;
+  optional string password = 4;
+  optional string role = 5;
+  optional string avatar = 6;
 }
 
 message UpdateUserRes {
@@ -204,4 +217,28 @@ message RegisterUserReq {
   string email = 3;
   string password = 4;
   string password_confirm = 5;
+}
+message RegisterUserRes {
+  string status = 1;
+  string message = 2;
+}
+
+// Verify OTP User
+message VerifyOTPReq {
+  string email = 1;
+  string otp = 2;
+}
+message VerifyOTPRes {
+  string status = 1;
+  string message = 2;
+  base.UserRes data = 3;
+}
+
+// Resend OTP User
+message ResendOTPReq {
+  string email = 1;
+}
+message ResendOTPRes {
+  string status = 1;
+  string message = 2;
 }

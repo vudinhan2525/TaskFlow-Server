@@ -27,11 +27,13 @@ export class MailSenderRepo implements IMailSender {
 
     if (options.template && options.data) {
       const templatePath = join(__dirname, 'public', 'templates', `${options.template}`);
+      console.log(`Template path resolved to: ${templatePath}`);
       const template = fs.readFileSync(templatePath, 'utf8');
       const compiled = handlebars.compile(template);
       html = compiled(options.data);
     }
 
+    console.log('Attempting to send email with options:', options);
     await this.transporter.sendMail({
       from: `"My App" <${this.configService.get<string>('MAIL_SMTP_USER')}>`,
       to: options.to,

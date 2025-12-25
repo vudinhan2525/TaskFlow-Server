@@ -83,8 +83,11 @@ message UpdateIssueReq {
   optional string type = 10;
   optional string column_id = 11;
   optional string priority = 12;
+  optional string due_date_from= 15;
+  optional string due_date_to= 16;
   google.protobuf.Int32Value story_point = 13;
   repeated string attachments = 14;
+  
 }
 
 // List All
@@ -95,8 +98,14 @@ message ListIssuesReq {
   repeated string sprint_ids = 4;
   optional string keyword = 5;
   repeated string issue_ids = 6;
-  int32 page = 7;
-  int32 limit = 8;
+  optional string due_date_from = 7;
+  optional string due_date_to = 8;
+  optional string created_at_from = 9;
+  optional string created_at_to = 10;
+  repeated string types = 11;
+  repeated string priorities= 12;
+  int32 page = 13;
+  int32 limit = 14;
 }
 
 message ListIssuesRes {

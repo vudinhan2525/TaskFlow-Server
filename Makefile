@@ -32,6 +32,11 @@ gen-protobuf-notification-service-wd:
 	protoc --plugin=protoc-gen-ts_proto=..\..\node_modules\.bin\protoc-gen-ts_proto.cmd --ts_proto_out=.\src\types --ts_proto_opt=nestJs=true --proto_path=.\src\proto .\src\proto\notification.proto && \
 	protoc -I .\src\proto -I .\src\proto\google\api --include_imports --include_source_info --descriptor_set_out=..\..\..\..\notification.pb .\src\proto\notification.proto
 
+gen-protobuf-chat-service-wd:
+	cd services\nest-service\apps\chat-service && \
+	protoc --plugin=protoc-gen-ts_proto=..\..\node_modules\.bin\protoc-gen-ts_proto.cmd --ts_proto_out=.\src\types --ts_proto_opt=nestJs=true --proto_path=.\src\protos .\src\protos\chat.proto && \
+	protoc -I .\src\protos -I .\src\protos\google\api --include_imports --include_source_info --descriptor_set_out=..\..\..\..\chat.pb .\src\protos\chat.proto
+
 gen-protobuf-main-service-wd:
 	powershell -Command "$$protos = Get-ChildItem -Recurse -Filter *.proto -Path './protos' | ForEach-Object { $$_.FullName | Resolve-Path -Relative }; protoc -I './protos' --include_imports --include_source_info --descriptor_set_out=./proto.pb $$protos"
 

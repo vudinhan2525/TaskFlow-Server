@@ -53,7 +53,8 @@ service ProjectService {
   }
   rpc GetProjectColumns (GetColumnsReq) returns (GetColumnsRes) {
     option (google.api.http) = {
-      get: "/api/v1/projects/{project_id}/columns"
+      post: "/api/v1/projects/{project_id}/columns"
+      body: "*"
     };
   }
   rpc UpdateOrderProjectColumns (UpdateColumnsOrderReq) returns (UpdateColumnsOrderRes) {
@@ -163,6 +164,16 @@ message CreateColumnRes {
 }
 message GetColumnsReq {
   string project_id = 1;
+  optional string due_date_from = 2;
+  optional string due_date_to = 3;
+  repeated string assignee_ids = 4;
+  repeated string sprint_ids = 5;
+  repeated string types = 6;
+  repeated string priorities = 7;
+  optional string keyword = 8;
+  optional string created_at_from = 9;
+  optional string created_at_to = 10;
+  repeated string column_ids = 11;
 }
 message GetColumnsRes {
   string status = 1;                  

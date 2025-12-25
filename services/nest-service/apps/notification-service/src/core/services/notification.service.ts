@@ -8,6 +8,7 @@ import { ProjectRes } from '@nest-service/core/types/main_service/project';
 import { SprintRes } from '@nest-service/core/types/main_service/sprint';
 import { IssueRes, UserRes } from '@nest-service/core/types/base';
 import { NotificationEmitterService } from '@notification-service/adapters/websocket/notification.websocket';
+
 export interface CreateNotificationParams {
   recipientId: string;
   actorId?: string;
@@ -17,6 +18,7 @@ export interface CreateNotificationParams {
   isRead: boolean;
   createdAt: Date;
 }
+
 export interface GetAllNotificationParams {
   userId?: string | undefined;
   projectId?: string | undefined;
@@ -47,6 +49,13 @@ export class NotificationService {
   ) {}
 
   async createNotification(data: CreateNotificationParams): Promise<NotificationDomain> {
+    if (!data.referenceId) {
+      throw new RpcException({
+        code: status.INVALID_ARGUMENT,
+        message: 'Missing referenceId for notification',
+      });
+    }
+
     const refType = this.getReferenceTypeByNotification(data.type);
 
     const noti = await this.notificationRepo.create({

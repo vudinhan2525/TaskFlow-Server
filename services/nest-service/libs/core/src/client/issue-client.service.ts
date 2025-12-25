@@ -20,7 +20,17 @@ export class IssueClientService implements OnModuleInit {
 
   async getListIssues(params: GetListIssuesClientParams): Promise<IssueRes[] | undefined> {
     const res = await firstValueFrom(
-      this.issueGrpcService.listIssues({ page: params.page, limit: params.limit, assigneeIds: [], columnIds: [], issueIds: params.issueIds, sprintIds: [], projectId: '' }),
+      this.issueGrpcService.listIssues({
+        page: params.page,
+        limit: params.limit,
+        assigneeIds: [],
+        columnIds: [],
+        issueIds: params.issueIds,
+        sprintIds: [],
+        projectId: '',
+        types: [],
+        priorities: [],
+      }),
     );
     return res.data;
   }
