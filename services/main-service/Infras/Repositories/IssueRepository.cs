@@ -122,6 +122,7 @@ public class IssueRepository : IIssueRepository
             })
         };
 
+            
         var rawResult = await _issues.Aggregate<BsonDocument>(pipeline).FirstOrDefaultAsync();
         var updatedIssue = BsonSerializer.Deserialize<Issue>(rawResult);
         return _mapper.Map<IssueDomain>(updatedIssue);

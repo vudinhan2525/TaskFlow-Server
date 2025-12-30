@@ -3,6 +3,7 @@ using MainService.Domain.Entities;
 using MainService.Domain.Interfaces;
 using MainService.Domain.Enums;
 using TaskFlow.IssueService;
+using System.Text.Json;
 
 namespace MainService.Domain.UseCases;
 
@@ -104,18 +105,22 @@ public class IssueUseCase
         return issue;
     }
 
-    public async Task<IssueDomain> UpdateIssue(UpdateIssueParams updateData)
+   public async Task<IssueDomain> UpdateIssue(UpdateIssueParams updateData)
     {
         if (string.IsNullOrEmpty(updateData.Id))
             throw new RpcException(new Status(StatusCode.InvalidArgument, "Issue ID cannot be empty"));
 
-        IssueDomain existingIssue = null!;
         IssueDomain oldIssue = null!;
+        IssueDomain updatedIssue = null!;
 
-        var updatedIssue = await _transactionRepo.ExecuteAsync(async session =>
+        updatedIssue = await _transactionRepo.ExecuteAsync(async session =>
         {
-            existingIssue = await _issueRepository.GetIssue(updateData.Id);
-            oldIssue = existingIssue;
+            var existingIssue = await _issueRepository.GetIssue(updateData.Id);
+            
+            // ✅ Deep clone oldIssue để tránh reference sharing
+            var oldIssueJson = JsonSerializer.Serialize(existingIssue);
+            oldIssue = JsonSerializer.Deserialize<IssueDomain>(oldIssueJson)!;
+
             if (!string.IsNullOrEmpty(updateData.ColumnId) && updateData.ColumnId != existingIssue.ColumnId)
             {
                 var newColumn = await _projectRepository.FindColumn(new GetColumnParams
@@ -134,8 +139,6 @@ public class IssueUseCase
                 if (oldColumn == null)
                     throw new RpcException(new Status(StatusCode.InvalidArgument, $"Original column with id '{existingIssue.ColumnId}' not found"));
 
-                // Check if moving to DONE column and set completed_at
-                // This logic automatically sets the completed_at timestamp when an issue is moved to a column named "DONE"
                 if (newColumn.Name.ToUpper() == "DONE" && oldColumn.Name.ToUpper() != "DONE")
                 {
                     updateData.CompletedAt = DateTime.UtcNow;
@@ -152,12 +155,23 @@ public class IssueUseCase
                     ColumnId = oldColumn.Id,
                 });
             }
+
             return await _issueRepository.UpdateIssue(updateData);
         });
+        _logger.LogInformation("📤 [ACTIVITY DEBUG] OldIssue.AssigneeId: {OldAssignee}, NewIssue.AssigneeId: {NewAssignee}",
+            oldIssue.AssigneeId, updatedIssue.AssigneeId);
+        _logger.LogInformation("📤 [ACTIVITY DEBUG] OldIssue.ColumnId: {OldColumn}, NewIssue.ColumnId: {NewColumn}",
+            oldIssue.ColumnId, updatedIssue.ColumnId);
+        _logger.LogInformation("📤 [ACTIVITY DEBUG] OldIssue.SprintId: {OldSprint}, NewIssue.SprintId: {NewSprint}",
+            oldIssue.SprintId, updatedIssue.SprintId);
+        _logger.LogInformation("📤 [ACTIVITY DEBUG] OldIssue.Title: '{OldTitle}', NewIssue.Title: '{NewTitle}'",
+            oldIssue.Title, updatedIssue.Title);
+
 
         var notifyTask = Task.CompletedTask;
-        // Check asignee change and actor_id different with recipient_id
-        if (oldIssue.AssigneeId != updatedIssue.AssigneeId && !string.IsNullOrEmpty(updatedIssue.AssigneeId) && updateData.CreatorId != updatedIssue.AssigneeId)
+        if (oldIssue.AssigneeId != updatedIssue.AssigneeId && 
+            !string.IsNullOrEmpty(updatedIssue.AssigneeId) && 
+            updateData.CreatorId != updatedIssue.AssigneeId)
         {
             notifyTask = _publisher.EmitKafka(TopicName.NOTIFICATIONS, KafkaMessageAction.NOTIFICATIONS_CREATE_NEW_NOTIFICATION, new INotificationMessage
             {
@@ -168,7 +182,7 @@ public class IssueUseCase
             });
         }
 
-        var activityTask = _publisher.EmitKafka(TopicName.ACTIVITIES, KafkaMessageAction.ACTIVITIES_ISSUE_CHANGED, new IActivitiesMessage
+         var activityTask = _publisher.EmitKafka(TopicName.ACTIVITIES, KafkaMessageAction.ACTIVITIES_ISSUE_CHANGED, new IActivitiesMessage
         {
             OldIssue = oldIssue,
             NewIssue = updatedIssue,
@@ -246,11 +260,15 @@ public class IssueUseCase
     private async Task<List<ActivityChange>> getDifferentChange(IssueDomain oldIssue, IssueDomain newIssue)
     {
         var changes = new List<ActivityChange>();
+        _logger.LogInformation("🔍 Comparing issue changes: OldColumn={OldCol}, NewColumn={NewCol}", 
+            oldIssue.ColumnId, newIssue.ColumnId);
 
         void Compare<T>(string field, T? oldValue, T? newValue)
         {
             if (!EqualityComparer<T>.Default.Equals(oldValue, newValue))
             {
+                _logger.LogInformation("✨ Detected change in field '{Field}': '{Old}' → '{New}'", 
+                    field, oldValue, newValue);
                 changes.Add(new ActivityChange
                 {
                     Field = field,
@@ -260,73 +278,91 @@ public class IssueUseCase
             }
         }
 
-        if (oldIssue.ColumnId != newIssue.ColumnId && oldIssue.ColumnId != null && newIssue.ColumnId != null)
+        // ✅ Sửa: So sánh ColumnId kể cả khi một bên là null
+        if (oldIssue.ColumnId != newIssue.ColumnId)
         {
-            var oldColumnTask = _projectRepository.FindColumn(new GetColumnParams
+            string? oldStatusName = null;
+            string? newStatusName = null;
+
+            if (!string.IsNullOrEmpty(oldIssue.ColumnId))
             {
-                ColumnId = oldIssue.ColumnId
-            });
-            var newColumnTask = _projectRepository.FindColumn(new GetColumnParams
+                var oldColumn = await _projectRepository.FindColumn(new GetColumnParams { ColumnId = oldIssue.ColumnId });
+                oldStatusName = oldColumn?.Name;
+            }
+
+            if (!string.IsNullOrEmpty(newIssue.ColumnId))
             {
-                ColumnId = newIssue.ColumnId
-            });
+                var newColumn = await _projectRepository.FindColumn(new GetColumnParams { ColumnId = newIssue.ColumnId });
+                newStatusName = newColumn?.Name;
+            }
 
-            await Task.WhenAll(oldColumnTask, newColumnTask);
-
-            var oldStatus = oldColumnTask.Result;
-            var newStatus = newColumnTask.Result;
-
-            Compare("Status", oldStatus.Name, newStatus.Name);
-        }
-        if (oldIssue.AssigneeId != newIssue.AssigneeId && oldIssue.AssigneeId != null && newIssue.AssigneeId != null)
-        {
-            var oldAsigneeTask = _userRepository.FindUserAsync(new UserQueryParams
-            {
-                UserId = oldIssue.AssigneeId
-            });
-            var newAsigneeTask = _userRepository.FindUserAsync(new UserQueryParams
-            {
-                UserId = newIssue.AssigneeId
-            });
-
-            await Task.WhenAll(oldAsigneeTask, newAsigneeTask);
-
-            var oldAsignee = oldAsigneeTask.Result;
-            var newAsignee = newAsigneeTask.Result;
-
-            Compare("Assignee", oldAsignee.FullName, newAsignee.FullName);
-        }
-        if (oldIssue.ReporterId != newIssue.ReporterId && oldIssue.ReporterId != null && newIssue.ReporterId != null)
-        {
-            var oldReporterTask = _userRepository.FindUserAsync(new UserQueryParams
-            {
-                UserId = oldIssue.ReporterId
-            });
-            var newReporterTask = _userRepository.FindUserAsync(new UserQueryParams
-            {
-                UserId = newIssue.ReporterId
-            });
-
-            await Task.WhenAll(oldReporterTask, newReporterTask);
-
-            var oldReporter = oldReporterTask.Result;
-            var newReporter = newReporterTask.Result;
-
-            Compare("Reporter", oldReporter.FullName, newReporter.FullName);
-        }
-        if (oldIssue.SprintId != newIssue.SprintId && oldIssue.SprintId != null && newIssue.SprintId != null)
-        {
-            var oldSprintTask = _sprintRepository.GetSprint(oldIssue.SprintId);
-            var newSprintTask = _sprintRepository.GetSprint(newIssue.SprintId);
-
-            await Task.WhenAll(oldSprintTask, newSprintTask);
-
-            var oldSprint = oldSprintTask.Result;
-            var newSprint = newSprintTask.Result;
-
-            Compare("Sprint", oldSprint.Name, newSprint.Name);
+            Compare("Status", oldStatusName, newStatusName);
         }
 
+        // ✅ Tương tự cho Assignee
+        if (oldIssue.AssigneeId != newIssue.AssigneeId)
+        {
+            string? oldAssigneeName = null;
+            string? newAssigneeName = null;
+
+            if (!string.IsNullOrEmpty(oldIssue.AssigneeId))
+            {
+                var oldUser = await _userRepository.FindUserAsync(new UserQueryParams { UserId = oldIssue.AssigneeId });
+                oldAssigneeName = oldUser?.FullName;
+            }
+
+            if (!string.IsNullOrEmpty(newIssue.AssigneeId))
+            {
+                var newUser = await _userRepository.FindUserAsync(new UserQueryParams { UserId = newIssue.AssigneeId });
+                newAssigneeName = newUser?.FullName;
+            }
+
+            Compare("Assignee", oldAssigneeName, newAssigneeName);
+        }
+
+        // ✅ Reporter
+        if (oldIssue.ReporterId != newIssue.ReporterId)
+        {
+            string? oldReporterName = null;
+            string? newReporterName = null;
+
+            if (!string.IsNullOrEmpty(oldIssue.ReporterId))
+            {
+                var oldUser = await _userRepository.FindUserAsync(new UserQueryParams { UserId = oldIssue.ReporterId });
+                oldReporterName = oldUser?.FullName;
+            }
+
+            if (!string.IsNullOrEmpty(newIssue.ReporterId))
+            {
+                var newUser = await _userRepository.FindUserAsync(new UserQueryParams { UserId = newIssue.ReporterId });
+                newReporterName = newUser?.FullName;
+            }
+
+            Compare("Reporter", oldReporterName, newReporterName);
+        }
+
+        // ✅ Sprint
+        if (oldIssue.SprintId != newIssue.SprintId)
+        {
+            string? oldSprintName = null;
+            string? newSprintName = null;
+
+            if (!string.IsNullOrEmpty(oldIssue.SprintId) && oldIssue.SprintId != "null")
+            {
+                var oldSprint = await _sprintRepository.GetSprint(oldIssue.SprintId);
+                oldSprintName = oldSprint?.Name;
+            }
+
+            if (!string.IsNullOrEmpty(newIssue.SprintId) && newIssue.SprintId != "null")
+            {
+                var newSprint = await _sprintRepository.GetSprint(newIssue.SprintId);
+                newSprintName = newSprint?.Name;
+            }
+
+            Compare("Sprint", oldSprintName, newSprintName);
+        }
+
+        // Các field đơn giản
         Compare("Title", oldIssue.Title, newIssue.Title);
         Compare("Description", oldIssue.Description, newIssue.Description);
         Compare("Priority", oldIssue.Priority, newIssue.Priority);
@@ -334,6 +370,7 @@ public class IssueUseCase
         Compare("Summary", oldIssue.Summary, newIssue.Summary);
         Compare<int?>("StoryPoint", oldIssue.StoryPoint, newIssue.StoryPoint);
 
+        _logger.LogInformation("✅ Total changes detected: {Count}", changes.Count);
         return changes;
     }
 

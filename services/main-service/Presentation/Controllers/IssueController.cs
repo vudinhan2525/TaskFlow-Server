@@ -130,6 +130,7 @@ public class IssueController : IssueService.IssueServiceBase
             throw new RpcException(new Status(StatusCode.InvalidArgument,
                 string.Join(", ", validationResult.Errors.Select(e => e.ErrorMessage))));
         }
+        _logger.LogInformation("🔧 Updating issue {IssueId} by user {UserId}", request.Id, userId);
         var result = await _issueUseCase.UpdateIssue(new UpdateIssueParams
         {
             Id = request.Id,
@@ -175,13 +176,17 @@ public class IssueController : IssueService.IssueServiceBase
             throw new RpcException(new Status(StatusCode.InvalidArgument,
                 string.Join(", ", validationResult.Errors.Select(e => e.ErrorMessage))));
         }
+
+        // ✅ Ghi đè: lấy TẤT CẢ issue
+        const int MAX_LIMIT = 1000; // hoặc 5000, tùy số lượng issue thực tế
+
         var columnIds = request.ColumnIds.ToList();
         var assigneeIds = request.AssigneeIds.ToList();
         var sprintIds = request.SprintIds.ToList();
         var (issues, totalCount) = await _issueUseCase.ListIssues(new GetIssuesParams
         {
-            Limit = request.Limit == 0 ? 10 : request.Limit,
-            Page = request.Page == 0 ? 1 : request.Page,
+            Limit = MAX_LIMIT,
+            Page = 1,
             ProjectId = request.ProjectId,
             AssigneeIds = assigneeIds,
             Keyword = request.Keyword,
@@ -197,15 +202,15 @@ public class IssueController : IssueService.IssueServiceBase
             ParentIds = request.ParentIds.ToList(),
             TeamIds = request.TeamIds.ToList(),
         });
-        var totalPages = (int)Math.Ceiling((double)totalCount / request.Limit);
+
         var response = new ListIssuesRes();
         response.Data.AddRange(_mapper.Map<List<IssueRes>>(issues));
         response.Pagination = new PaginationRes
         {
             TotalItems = totalCount,
-            TotalPages = totalPages,
-            CurrentPage = request.Page,
-            Limit = request.Limit
+            TotalPages = 1,
+            CurrentPage = 1,
+            Limit = totalCount
         };
         return response;
     }

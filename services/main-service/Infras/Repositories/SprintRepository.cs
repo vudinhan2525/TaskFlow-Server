@@ -40,11 +40,24 @@ public class SprintRepository : ISprintRepository
         return sprintDomain;
     }
 
-    public async Task<SprintDomain> GetSprint(string id)
+    public async Task<SprintDomain?> GetSprint(string? id)
     {
+        if (string.IsNullOrEmpty(id) || id == "null")
+        {
+            return null; // ✅ Không throw, chỉ trả null
+        }
+
+        // Kiểm tra ObjectId hợp lệ (nếu cần)
+        if (!ObjectId.TryParse(id, out _))
+        {
+            _logger.LogWarning("Invalid ObjectId format: {Id}", id);
+            return null;
+        }
+
         var sprintEntity = await _sprints.Find(s => s.Id == id).FirstOrDefaultAsync();
         if (sprintEntity == null)
-            throw new Exception("Sprint not found");
+            return null; // ✅ Không throw
+
         return _mapper.Map<SprintDomain>(sprintEntity);
     }
 

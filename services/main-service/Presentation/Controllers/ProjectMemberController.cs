@@ -100,23 +100,23 @@ public class ProjectMemberController : ProjectMemberService.ProjectMemberService
     }
 
     public override async Task<ListProjectMembersRes> ListProjectMembers(ListProjectMembersReq request, ServerCallContext context)
+{
+    try
     {
-        try
+        var userId = context.UserState.ContainsKey("UserId") ? context.UserState["UserId"] as string : null;
+        if (string.IsNullOrEmpty(userId))
         {
-            var userId = context.UserState.ContainsKey("UserId") ? context.UserState["UserId"] as string : null;
-            if (string.IsNullOrEmpty(userId))
-            {
-                throw new RpcException(new Status(StatusCode.Unauthenticated, "User must be authenticated"));
-            }
+            throw new RpcException(new Status(StatusCode.Unauthenticated, "User must be authenticated"));
+        }
 
-            var userMember = await _projectMemberUseCase.GetByProjectAndUserAsync(request.ProjectId, userId);
-            if (userMember == null || userMember.IsPending)
-            {
-                throw new RpcException(new Status(StatusCode.PermissionDenied, "Access denied. User must be an approved member of the project."));
-            }
+        var userMember = await _projectMemberUseCase.GetByProjectAndUserAsync(request.ProjectId, userId);
+        if (userMember == null || userMember.IsPending)
+        {
+            throw new RpcException(new Status(StatusCode.PermissionDenied, "Access denied. User must be an approved member of the project."));
+        }
 
-            if (request.Page <= 0) request.Page = 1;
-            if (request.Limit <= 0) request.Limit = 10;
+        if (request.Page <= 0) request.Page = 1;
+        if (request.Limit <= 0) request.Limit = 10;
 
             // Use search functionality if name or email filters are provided
             var (members, totalCount) = await _projectMemberUseCase.SearchProjectMembersAsync(new SearchProjectMemberQueryParams
@@ -129,27 +129,31 @@ public class ProjectMemberController : ProjectMemberService.ProjectMemberService
             });
            
 
-            var response = new ListProjectMembersRes
-            {
-                Pagination = new PaginationRes
-                {
-                    TotalItems = totalCount,
-                    CurrentPage = request.Page,
-                    Limit = request.Limit,
-                    TotalPages = (int)Math.Ceiling(totalCount / (double)request.Limit)
-                }
-            };
-
-            response.Data.AddRange(members.Select(MapToProjectMemberResponse));
-            return response;
-        }
-        catch (Exception ex)
+        var response = new ListProjectMembersRes
         {
-            _logger.LogError(ex, "Error listing project members for project {ProjectId}", request.ProjectId);
-            throw new RpcException(new Status(StatusCode.Internal, "Error listing project members"));
-        }
-    }
+            Pagination = new PaginationRes
+            {
+                TotalItems = totalCount,
+                CurrentPage = request.Page,
+                Limit = request.Limit,
+                TotalPages = (int)Math.Ceiling(totalCount / (double)request.Limit)
+            }
+        };
 
+        response.Data.AddRange(members.Select(MapToProjectMemberResponse));
+        return response;
+    }
+    catch (RpcException)
+    {
+        // Re-throw gRPC exceptions as-is; they are intentional responses
+        throw;
+    }
+    catch (Exception ex)
+    {
+        _logger.LogError(ex, "Error listing project members for project {ProjectId}", request.ProjectId);
+        throw new RpcException(new Status(StatusCode.Internal, "Error listing project members"));
+    }
+}
     public override async Task<GetUserMembershipsRes> GetUserMemberships(UserMembershipsReq request, ServerCallContext context)
     {
         try

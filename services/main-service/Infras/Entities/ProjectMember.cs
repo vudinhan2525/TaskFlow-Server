@@ -36,7 +36,10 @@ public class ProjectMember
 
     [BsonElement("updated_at")]
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
-
+    
+    // [BsonElement("team_ids")]
+    // public List<ObjectId>? TeamIds { get; set; }
+    
     [BsonIgnore]
     public virtual User? User { get; set; }
 
